@@ -912,16 +912,25 @@ function initSimpleCarousel(trackId, prevId, nextId, dotsId) {
     const slides = track.children;
     const totalSlides = slides.length;
     
+    function getGapPx() {
+        const styles = window.getComputedStyle(track);
+        const gap = styles.gap || '0px';
+        const gapValue = parseFloat(gap);
+        return Number.isNaN(gapValue) ? 0 : gapValue;
+    }
+
     function updateCarousel() {
-        const translateX = -currentSlide * 100;
-        track.style.transform = `translateX(${translateX}%)`;
-        
-        console.log('Updating carousel:', {
-            currentSlide,
-            translateX,
-            totalSlides
-        });
-        
+        const firstSlide = slides[0];
+        // Guard if no slides
+        if (!firstSlide) return;
+
+        const gapPx = getGapPx();
+        const slideRect = firstSlide.getBoundingClientRect();
+        const slideWidthPx = slideRect.width; // width excludes the gap
+        const offsetPx = currentSlide * (slideWidthPx + gapPx);
+
+        track.style.transform = `translateX(-${offsetPx}px)`;
+
         // Update dots
         if (dots) {
             const dotElements = dots.querySelectorAll('.dot');
@@ -968,6 +977,9 @@ function initSimpleCarousel(trackId, prevId, nextId, dotsId) {
         });
     }
     
+    // Recompute position on resize for responsive widths
+    window.addEventListener('resize', updateCarousel);
+
     // Initialize
     updateCarousel();
     
